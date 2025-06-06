@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/authentication/presentation/bloc/auth_bloc.dart';
+import '../../features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import '../../features/onboarding/presentation/pages/splash_page.dart';
-import '../../features/authentication/presentation/pages/login_page.dart';
-import '../../features/authentication/presentation/pages/register_page.dart';
-import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/user_profile/presentation/pages/welcome_page.dart';
+import '../../features/user_profile/presentation/pages/profile_setup_page.dart';
 import '../../features/period_tracking/presentation/pages/period_home_page.dart';
+import '../../features/calendar/presentation/pages/calendar_page.dart';
+import '../../features/symptom_tracking/presentation/pages/symptom_tracker_page.dart';
+import '../../features/analytics/presentation/pages/analytics_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../shared/presentation/layouts/main_layout.dart';
 import 'route_names.dart';
 import 'route_guards.dart';
@@ -15,7 +18,7 @@ import 'route_guards.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: RouteNames.splash,
-    redirect: RouteGuards.authGuard,
+    redirect: RouteGuards.profileGuard,
     routes: [
       // Splash route
       GoRoute(
@@ -24,23 +27,16 @@ class AppRouter {
         builder: (context, state) => const SplashPage(),
       ),
 
-      // Authentication routes
+      // Welcome and setup routes
       GoRoute(
-        path: RouteNames.login,
-        name: 'login',
-        builder: (context, state) => const LoginPage(),
+        path: RouteNames.welcome,
+        name: 'welcome',
+        builder: (context, state) => const WelcomePage(),
       ),
       GoRoute(
-        path: RouteNames.register,
-        name: 'register',
-        builder: (context, state) => const RegisterPage(),
-      ),
-
-      // Onboarding routes
-      GoRoute(
-        path: RouteNames.onboarding,
-        name: 'onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        path: RouteNames.profileSetup,
+        name: 'profileSetup',
+        builder: (context, state) => const ProfileSetupPage(),
       ),
 
       // Main app shell with bottom navigation

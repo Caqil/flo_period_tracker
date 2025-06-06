@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../authentication/presentation/bloc/auth_bloc.dart';
+import '../../../user_profile/presentation/bloc/user_profile_bloc.dart';
 import '../../../../config/routes/route_names.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -24,7 +24,7 @@ class _SplashPageState extends State<SplashPage>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _navigateAfterDelay();
+    _checkProfile();
   }
 
   void _initializeAnimations() {
@@ -50,21 +50,24 @@ class _SplashPageState extends State<SplashPage>
     _animationController.forward();
   }
 
-  Future<void> _navigateAfterDelay() async {
+  Future<void> _checkProfile() async {
+    // Load profile to check if user exists
+    context.read<UserProfileBloc>().add(const UserProfileLoadRequested());
+
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    final authState = context.read<AuthBloc>().state;
+    final profileState = context.read<UserProfileBloc>().state;
 
-    if (authState is AuthAuthenticated) {
-      if (authState.user.isOnboardingCompleted) {
+    if (profileState is UserProfileLoaded) {
+      if (profileState.profile.isSetupCompleted) {
         context.go(RouteNames.home);
       } else {
-        context.go(RouteNames.onboarding);
+        context.go(RouteNames.profileSetup);
       }
     } else {
-      context.go(RouteNames.login);
+      context.go(RouteNames.welcome);
     }
   }
 

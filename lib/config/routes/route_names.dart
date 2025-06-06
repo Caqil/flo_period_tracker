@@ -1,9 +1,8 @@
 class RouteNames {
-  // Authentication & Onboarding
+  // App initialization
   static const String splash = '/';
-  static const String login = '/login';
-  static const String register = '/register';
-  static const String onboarding = '/onboarding';
+  static const String welcome = '/welcome';
+  static const String profileSetup = '/profile-setup';
 
   // Main navigation
   static const String home = '/home';
@@ -28,4 +27,6 @@ class RouteNames {
   // User profile
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
+  static const String appSecurity = '/profile/security';
 }
+

@@ -49,7 +49,7 @@ class PeriodBloc extends Bloc<PeriodEvent, PeriodState> {
           emit(
             PeriodLoaded(
               currentCycle: cycle,
-              periods: cycle.periods,
+              periods: cycle!.periods,
               nextPeriodPrediction: null,
             ),
           );

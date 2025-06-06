@@ -3,9 +3,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../data/datasources/calendar_local_datasource.dart';
 import '../../domain/entities/calendar_day.dart';
 import '../../domain/repositories/calendar_repository.dart';
-import '../datasources/calendar_local_datasource.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/exceptions.dart';
 

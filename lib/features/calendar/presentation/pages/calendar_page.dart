@@ -106,7 +106,6 @@ class _CalendarPageState extends State<CalendarPage> {
               children: [
                 // Calendar
                 ShadCard(
-                  margin: const EdgeInsets.all(16),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: ValueListenableBuilder<DateTime>(
@@ -136,7 +135,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                 holidayTextStyle: TextStyle(
                                   color: theme.colorScheme.mutedForeground,
                                 ),
-                                selectedDecoration: BoxDecoration(
+                                selectedDecoration: const BoxDecoration(
                                   color: AppTheme.primaryPink,
                                   shape: BoxShape.circle,
                                 ),
@@ -144,7 +143,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   color: AppTheme.primaryPink.withOpacity(0.3),
                                   shape: BoxShape.circle,
                                 ),
-                                markerDecoration: BoxDecoration(
+                                markerDecoration: const BoxDecoration(
                                   color: AppTheme.primaryPink,
                                   shape: BoxShape.circle,
                                 ),
@@ -157,7 +156,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   color: AppTheme.primaryPink.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                formatButtonTextStyle: TextStyle(
+                                formatButtonTextStyle: const TextStyle(
                                   color: AppTheme.primaryPink,
                                   fontWeight: FontWeight.w600,
                                 ),

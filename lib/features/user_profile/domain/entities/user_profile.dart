@@ -1,56 +1,59 @@
 import 'package:equatable/equatable.dart';
 
-class User extends Equatable {
+class UserProfile extends Equatable {
   final String id;
-  final String email;
   final String? name;
   final DateTime? dateOfBirth;
   final int averageCycleLength;
   final int averagePeriodLength;
   final DateTime? lastPeriodDate;
-  final bool isOnboardingCompleted;
-  final String? profileImageUrl;
+  final bool isSetupCompleted;
+  final String? profileImagePath; // Local file path
+  final bool isPinEnabled;
+  final bool isBiometricEnabled;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  const User({
+  const UserProfile({
     required this.id,
-    required this.email,
     this.name,
     this.dateOfBirth,
     this.averageCycleLength = 28,
     this.averagePeriodLength = 5,
     this.lastPeriodDate,
-    this.isOnboardingCompleted = false,
-    this.profileImageUrl,
+    this.isSetupCompleted = false,
+    this.profileImagePath,
+    this.isPinEnabled = false,
+    this.isBiometricEnabled = false,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  User copyWith({
+  UserProfile copyWith({
     String? id,
-    String? email,
     String? name,
     DateTime? dateOfBirth,
     int? averageCycleLength,
     int? averagePeriodLength,
     DateTime? lastPeriodDate,
-    bool? isOnboardingCompleted,
-    String? profileImageUrl,
+    bool? isSetupCompleted,
+    String? profileImagePath,
+    bool? isPinEnabled,
+    bool? isBiometricEnabled,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return User(
+    return UserProfile(
       id: id ?? this.id,
-      email: email ?? this.email,
       name: name ?? this.name,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       averageCycleLength: averageCycleLength ?? this.averageCycleLength,
       averagePeriodLength: averagePeriodLength ?? this.averagePeriodLength,
       lastPeriodDate: lastPeriodDate ?? this.lastPeriodDate,
-      isOnboardingCompleted:
-          isOnboardingCompleted ?? this.isOnboardingCompleted,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
+      isPinEnabled: isPinEnabled ?? this.isPinEnabled,
+      isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -59,14 +62,15 @@ class User extends Equatable {
   @override
   List<Object?> get props => [
     id,
-    email,
     name,
     dateOfBirth,
     averageCycleLength,
     averagePeriodLength,
     lastPeriodDate,
-    isOnboardingCompleted,
-    profileImageUrl,
+    isSetupCompleted,
+    profileImagePath,
+    isPinEnabled,
+    isBiometricEnabled,
     createdAt,
     updatedAt,
   ];

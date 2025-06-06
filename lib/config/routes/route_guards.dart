@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/authentication/presentation/bloc/auth_bloc.dart';
+import '../../features/user_profile/presentation/bloc/user_profile_bloc.dart';
 import 'route_names.dart';
 
 class RouteGuards {
-  static String? authGuard(BuildContext context, GoRouterState state) {
-    final authBloc = context.read<AuthBloc>();
-    final authState = authBloc.state;
+  static String? profileGuard(BuildContext context, GoRouterState state) {
+    final profileBloc = context.read<UserProfileBloc>();
+    final profileState = profileBloc.state;
     final location = state.matchedLocation;
 
-    // Routes that don't require authentication
+    // Routes that don't require profile setup
     const publicRoutes = [
       RouteNames.splash,
-      RouteNames.login,
-      RouteNames.register,
+      RouteNames.welcome,
+      RouteNames.profileSetup,
     ];
 
     // If currently on a public route, no redirect needed
@@ -23,24 +23,24 @@ class RouteGuards {
       return null;
     }
 
-    // Check authentication state
-    if (authState is AuthUnauthenticated || authState is AuthError) {
-      // User is not authenticated, redirect to login
-      return RouteNames.login;
+    // Check profile state
+    if (profileState is UserProfileNotFound) {
+      // No profile exists, redirect to welcome
+      return RouteNames.welcome;
     }
 
-    if (authState is AuthAuthenticated) {
-      // User is authenticated but hasn't completed onboarding
-      if (!authState.user.isOnboardingCompleted &&
-          location != RouteNames.onboarding) {
-        return RouteNames.onboarding;
+    if (profileState is UserProfileLoaded) {
+      // Profile exists but setup not completed
+      if (!profileState.profile.isSetupCompleted &&
+          location != RouteNames.profileSetup) {
+        return RouteNames.profileSetup;
       }
 
-      // User is authenticated and onboarded, no redirect needed
+      // Profile is complete, no redirect needed
       return null;
     }
 
-    // Auth state is loading or initial, stay on current route
+    // Profile state is loading or initial, stay on current route
     return null;
   }
 
@@ -57,14 +57,14 @@ class RouteGuards {
     return protectedRoutes.contains(route);
   }
 
-  static bool requiresOnboarding(String route) {
-    const onboardingRequiredRoutes = [
+  static bool requiresSetup(String route) {
+    const setupRequiredRoutes = [
       RouteNames.home,
       RouteNames.calendar,
       RouteNames.symptoms,
       RouteNames.analytics,
     ];
 
-    return onboardingRequiredRoutes.contains(route);
+    return setupRequiredRoutes.contains(route);
   }
 }
