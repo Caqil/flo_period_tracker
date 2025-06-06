@@ -129,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                     placeholder: const Text('Password'),
                     obscureText: !_isPasswordVisible,
                     validator: Validators.password,
-                    suffix: ShadButton.ghost(
+                    trailing: ShadButton.ghost(
                       onPressed: () {
                         setState(() {
                           _isPasswordVisible = !_isPasswordVisible;
@@ -189,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       ShadButton.ghost(
                         onPressed: () => context.go(RouteNames.register),
-                        child: Text(
+                        child: const Text(
                           'Sign Up',
                           style: TextStyle(
                             color: AppTheme.primaryPink,

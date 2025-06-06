@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-import '../../features/settings/domain/entities/app_settings.dart';
+import '../../features/settings/presentation/bloc/settings_bloc.dart';
 
 class AppTheme {
   // Primary colors for period tracking app

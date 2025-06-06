@@ -335,7 +335,7 @@ class _SymptomTrackerPageState extends State<SymptomTrackerPage> {
       context: context,
       builder: (context) => ShadDialog(
         title: Text('${symptom.name} Intensity'),
-        content: Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
