@@ -7,6 +7,11 @@ class SettingsState extends Equatable {
   final bool notificationsEnabled;
   final double borderRadius;
   final String fontFamily;
+  final bool biometricEnabled;
+  final bool periodRemindersEnabled;
+  final bool ovulationRemindersEnabled;
+  final int reminderDaysBefore;
+  final TimeOfDay reminderTime;
   final bool isLoaded;
 
   const SettingsState({
@@ -16,6 +21,11 @@ class SettingsState extends Equatable {
     this.notificationsEnabled = true,
     this.borderRadius = 8.0,
     this.fontFamily = 'GeistSans',
+    this.biometricEnabled = false,
+    this.periodRemindersEnabled = true,
+    this.ovulationRemindersEnabled = true,
+    this.reminderDaysBefore = 3,
+    this.reminderTime = const TimeOfDay(hour: 9, minute: 0),
     this.isLoaded = false,
   });
 
@@ -35,6 +45,11 @@ class SettingsState extends Equatable {
     bool? notificationsEnabled,
     double? borderRadius,
     String? fontFamily,
+    bool? biometricEnabled,
+    bool? periodRemindersEnabled,
+    bool? ovulationRemindersEnabled,
+    int? reminderDaysBefore,
+    TimeOfDay? reminderTime,
     bool? isLoaded,
   }) {
     return SettingsState(
@@ -44,6 +59,13 @@ class SettingsState extends Equatable {
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       borderRadius: borderRadius ?? this.borderRadius,
       fontFamily: fontFamily ?? this.fontFamily,
+      biometricEnabled: biometricEnabled ?? this.biometricEnabled,
+      periodRemindersEnabled:
+          periodRemindersEnabled ?? this.periodRemindersEnabled,
+      ovulationRemindersEnabled:
+          ovulationRemindersEnabled ?? this.ovulationRemindersEnabled,
+      reminderDaysBefore: reminderDaysBefore ?? this.reminderDaysBefore,
+      reminderTime: reminderTime ?? this.reminderTime,
       isLoaded: isLoaded ?? this.isLoaded,
     );
   }
@@ -56,6 +78,11 @@ class SettingsState extends Equatable {
     notificationsEnabled,
     borderRadius,
     fontFamily,
+    biometricEnabled,
+    periodRemindersEnabled,
+    ovulationRemindersEnabled,
+    reminderDaysBefore,
+    reminderTime,
     isLoaded,
   ];
 }

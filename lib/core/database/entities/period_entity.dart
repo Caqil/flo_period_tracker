@@ -1,18 +1,29 @@
+// lib/core/database/entities/period_entity.dart
 import 'package:floor/floor.dart';
 import 'package:equatable/equatable.dart';
+
+import '../converters/date_time_converter.dart';
 
 @Entity(tableName: 'periods')
 class PeriodEntity extends Equatable {
   @PrimaryKey(autoGenerate: true)
   final int? id;
 
+  @TypeConverters([DateTimeConverter])
   final DateTime startDate;
+
+  @TypeConverters([DateTimeNullableConverter])
   final DateTime? endDate;
+
   final int cycleLength;
   final String flowIntensity; // light, medium, heavy, spotting
   final String? notes;
   final bool isConfirmed;
+
+  @TypeConverters([DateTimeConverter])
   final DateTime createdAt;
+
+  @TypeConverters([DateTimeConverter])
   final DateTime updatedAt;
 
   const PeriodEntity({

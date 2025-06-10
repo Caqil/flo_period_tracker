@@ -1,16 +1,26 @@
+// lib/core/database/entities/mood_entity.dart
 import 'package:floor/floor.dart';
 import 'package:equatable/equatable.dart';
+
+import '../converters/date_time_converter.dart';
 
 @Entity(tableName: 'moods')
 class MoodEntity extends Equatable {
   @PrimaryKey(autoGenerate: true)
   final int? id;
 
+  @TypeConverters([DateTimeConverter])
   final DateTime date;
+
   final String mood; // happy, sad, anxious, irritated, etc.
   final int intensity; // 1-5 scale
-  final List<String> emotions; // multiple emotion tags
+
+  // Store emotions as comma-separated string
+  final String emotions; // multiple emotion tags stored as comma-separated
+
   final String? notes;
+
+  @TypeConverters([DateTimeConverter])
   final DateTime createdAt;
 
   const MoodEntity({
@@ -23,12 +33,22 @@ class MoodEntity extends Equatable {
     required this.createdAt,
   });
 
+  // Helper methods to convert between List<String> and String
+  List<String> get emotionsList {
+    if (emotions.isEmpty) return [];
+    return emotions.split(',').map((e) => e.trim()).toList();
+  }
+
+  static String emotionsFromList(List<String> emotionsList) {
+    return emotionsList.join(',');
+  }
+
   MoodEntity copyWith({
     int? id,
     DateTime? date,
     String? mood,
     int? intensity,
-    List<String>? emotions,
+    String? emotions,
     String? notes,
     DateTime? createdAt,
   }) {

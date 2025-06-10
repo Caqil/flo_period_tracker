@@ -64,3 +64,48 @@ class SettingsFontFamilyChanged extends SettingsEvent {
   @override
   List<Object> get props => [fontFamily];
 }
+
+class SettingsBiometricChanged extends SettingsEvent {
+  final bool enabled;
+
+  const SettingsBiometricChanged(this.enabled);
+
+  @override
+  List<Object> get props => [enabled];
+}
+
+class SettingsPeriodRemindersChanged extends SettingsEvent {
+  final bool enabled;
+
+  const SettingsPeriodRemindersChanged(this.enabled);
+
+  @override
+  List<Object> get props => [enabled];
+}
+
+class SettingsOvulationRemindersChanged extends SettingsEvent {
+  final bool enabled;
+
+  const SettingsOvulationRemindersChanged(this.enabled);
+
+  @override
+  List<Object> get props => [enabled];
+}
+
+class SettingsReminderDaysChanged extends SettingsEvent {
+  final int days;
+
+  const SettingsReminderDaysChanged(this.days);
+
+  @override
+  List<Object> get props => [days];
+}
+
+class SettingsReminderTimeChanged extends SettingsEvent {
+  final TimeOfDay time;
+
+  const SettingsReminderTimeChanged(this.time);
+
+  @override
+  List<Object> get props => [time];
+}

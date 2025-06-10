@@ -4,12 +4,11 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../data/datasources/period_local_datasource.dart';
+import '../../data/models/period_model.dart';
 import '../../domain/entities/period.dart';
 import '../../domain/entities/cycle.dart';
 import '../../domain/repositories/period_repository.dart';
-import '../datasources/period_local_datasource.dart';
-import '../models/period_model.dart';
-import '../models/cycle_model.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/exceptions.dart';
 

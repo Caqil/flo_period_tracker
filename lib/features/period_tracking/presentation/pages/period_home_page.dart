@@ -112,6 +112,9 @@ class _PeriodHomePageState extends State<PeriodHomePage> {
                 if (state is PeriodLoaded && state.nextPeriodPrediction != null)
                   NextPeriodPredictionCard(
                     predictedDate: state.nextPeriodPrediction!,
+                    confidenceLevel: 4, // optional
+                    isLate: false, // optional
+                    onSetReminder: () {}, // optional
                   ),
 
                 const SizedBox(height: 16),
@@ -155,7 +158,7 @@ class _PeriodHomePageState extends State<PeriodHomePage> {
                 color: AppTheme.primaryPink.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.waving_hand,
                 color: AppTheme.primaryPink,
                 size: 24,
@@ -197,7 +200,7 @@ class _PeriodHomePageState extends State<PeriodHomePage> {
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.lightbulb_outline,
                   color: AppTheme.primaryPink,
                   size: 20,
@@ -220,7 +223,11 @@ class _PeriodHomePageState extends State<PeriodHomePage> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.eco, color: AppTheme.fertilityGreen, size: 20),
+                  const Icon(
+                    Icons.eco,
+                    color: AppTheme.fertilityGreen,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

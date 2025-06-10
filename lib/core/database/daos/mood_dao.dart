@@ -93,25 +93,7 @@ abstract class MoodDao {
   @Query('SELECT AVG(intensity) FROM moods WHERE mood = :moodType')
   Future<double?> getAverageIntensityByMoodType(String moodType);
 
-  // Mood Pattern Analysis
-  @Query(
-    'SELECT mood, COUNT(*) as count FROM moods GROUP BY mood ORDER BY count DESC',
-  )
-  Future<List<Map<String, dynamic>>> getMoodFrequency();
-
-  @Query(
-    'SELECT mood, COUNT(*) as count FROM moods WHERE date >= :startDate AND date <= :endDate GROUP BY mood ORDER BY count DESC',
-  )
-  Future<List<Map<String, dynamic>>> getMoodFrequencyInRange(
-    DateTime startDate,
-    DateTime endDate,
-  );
-
-  @Query(
-    'SELECT intensity, COUNT(*) as count FROM moods GROUP BY intensity ORDER BY intensity',
-  )
-  Future<List<Map<String, dynamic>>> getIntensityDistribution();
-
+  // Mood Pattern Analysis - Simplified queries
   @Query('SELECT mood FROM moods GROUP BY mood ORDER BY COUNT(*) DESC LIMIT 1')
   Future<String?> getMostFrequentMood();
 
@@ -123,49 +105,36 @@ abstract class MoodDao {
     DateTime endDate,
   );
 
-  // Emotion Analysis
-  @Query(
-    'SELECT emotions FROM moods WHERE emotions IS NOT NULL AND emotions != ""',
-  )
-  Future<List<String>> getAllEmotions();
+  @Query('SELECT COUNT(*) FROM moods WHERE mood = :moodType')
+  Future<int?> getMoodFrequencyByType(String moodType);
 
+  @Query(
+    'SELECT COUNT(*) FROM moods WHERE date >= :startDate AND date <= :endDate AND mood = :moodType',
+  )
+  Future<int?> getMoodFrequencyByTypeInRange(
+    DateTime startDate,
+    DateTime endDate,
+    String moodType,
+  );
+
+  @Query('SELECT COUNT(*) FROM moods WHERE intensity = :intensity')
+  Future<int?> getIntensityCount(int intensity);
+
+  // Emotion Analysis
   @Query('SELECT * FROM moods WHERE emotions LIKE :emotion ORDER BY date DESC')
   Future<List<MoodEntity>> getMoodsByEmotion(String emotion);
 
-  // Weekly/Monthly Analysis
-  @Query('''SELECT 
-        strftime('%Y-%W', date) as week,
-        AVG(intensity) as avgIntensity,
-        COUNT(*) as count
-       FROM moods 
-       WHERE date >= :startDate 
-       GROUP BY strftime('%Y-%W', date) 
-       ORDER BY week DESC''')
-  Future<List<Map<String, dynamic>>> getWeeklyMoodStats(DateTime startDate);
+  @Query('SELECT COUNT(*) FROM moods WHERE emotions LIKE :emotion')
+  Future<int?> getEmotionFrequency(String emotion);
 
-  @Query('''SELECT 
-        strftime('%Y-%m', date) as month,
-        AVG(intensity) as avgIntensity,
-        COUNT(*) as count
-       FROM moods 
-       WHERE date >= :startDate 
-       GROUP BY strftime('%Y-%m', date) 
-       ORDER BY month DESC''')
-  Future<List<Map<String, dynamic>>> getMonthlyMoodStats(DateTime startDate);
+  // Weekly/Monthly Analysis - Simplified individual queries
+  @Query('''SELECT AVG(intensity) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate''')
+  Future<double?> getAvgIntensityInPeriod(DateTime startDate, DateTime endDate);
 
-  // Streak Analysis
-  @Query('''SELECT COUNT(*) as streak 
-       FROM (
-         SELECT date, 
-                ROW_NUMBER() OVER (ORDER BY date) - 
-                ROW_NUMBER() OVER (PARTITION BY date ORDER BY date) as grp
-         FROM moods 
-         WHERE date >= :startDate
-       ) 
-       GROUP BY grp 
-       ORDER BY streak DESC 
-       LIMIT 1''')
-  Future<int?> getLongestMoodStreak(DateTime startDate);
+  @Query('''SELECT COUNT(*) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate''')
+  Future<int?> getMoodCountInPeriod(DateTime startDate, DateTime endDate);
 
   // Notes Analysis
   @Query('SELECT * FROM moods WHERE notes IS NOT NULL AND notes != ""')
@@ -174,19 +143,8 @@ abstract class MoodDao {
   @Query('SELECT * FROM moods WHERE notes LIKE :searchTerm ORDER BY date DESC')
   Future<List<MoodEntity>> searchMoodsByNotes(String searchTerm);
 
-  // Cycle Day Analysis (for period tracking correlation)
-  @Query('''SELECT 
-        (julianday(date) - julianday(:cycleStartDate)) % :cycleLength + 1 as cycleDay,
-        AVG(intensity) as avgIntensity,
-        COUNT(*) as count
-       FROM moods 
-       WHERE date >= :cycleStartDate
-       GROUP BY cycleDay 
-       ORDER BY cycleDay''')
-  Future<List<Map<String, dynamic>>> getMoodByCycleDay(
-    DateTime cycleStartDate,
-    int cycleLength,
-  );
+  @Query('SELECT COUNT(*) FROM moods WHERE notes IS NOT NULL AND notes != ""')
+  Future<int?> getMoodsWithNotesCount();
 
   // Data Cleanup
   @Query('DELETE FROM moods WHERE date < :beforeDate')
@@ -209,29 +167,70 @@ abstract class MoodDao {
   @Query('SELECT EXISTS(SELECT 1 FROM moods WHERE date = :date LIMIT 1)')
   Future<bool?> hasMoodForDate(DateTime date);
 
-  // Advanced Analytics
-  @Query('''SELECT 
-        date,
-        mood,
-        intensity,
-        LAG(intensity) OVER (ORDER BY date) as previousIntensity
-       FROM moods 
-       WHERE date >= :startDate 
-       ORDER BY date''')
-  Future<List<Map<String, dynamic>>> getMoodTrends(DateTime startDate);
+  // Advanced Analytics - Simplified individual queries
+  @Query(
+    'SELECT intensity FROM moods WHERE date = :date ORDER BY createdAt DESC LIMIT 1',
+  )
+  Future<int?> getIntensityForDate(DateTime date);
 
-  @Query('''SELECT 
-        mood,
-        AVG(intensity) as avgIntensity,
-        MIN(intensity) as minIntensity,
-        MAX(intensity) as maxIntensity,
-        COUNT(*) as frequency
-       FROM moods 
-       WHERE date >= :startDate AND date <= :endDate
-       GROUP BY mood
-       ORDER BY frequency DESC''')
-  Future<List<Map<String, dynamic>>> getMoodStatsByType(
+  @Query(
+    'SELECT mood FROM moods WHERE date = :date ORDER BY createdAt DESC LIMIT 1',
+  )
+  Future<String?> getMoodTypeForDate(DateTime date);
+
+  // Mood stats by type - individual queries
+  @Query('''SELECT AVG(intensity) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate AND mood = :moodType''')
+  Future<double?> getAvgIntensityByMoodTypeInRange(
     DateTime startDate,
     DateTime endDate,
+    String moodType,
   );
+
+  @Query('''SELECT MIN(intensity) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate AND mood = :moodType''')
+  Future<int?> getMinIntensityByMoodTypeInRange(
+    DateTime startDate,
+    DateTime endDate,
+    String moodType,
+  );
+
+  @Query('''SELECT MAX(intensity) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate AND mood = :moodType''')
+  Future<int?> getMaxIntensityByMoodTypeInRange(
+    DateTime startDate,
+    DateTime endDate,
+    String moodType,
+  );
+
+  @Query('''SELECT COUNT(*) FROM moods 
+       WHERE date >= :startDate AND date <= :endDate AND mood = :moodType''')
+  Future<int?> getFrequencyByMoodTypeInRange(
+    DateTime startDate,
+    DateTime endDate,
+    String moodType,
+  );
+
+  // Cycle day analysis - simplified
+  @Query('''SELECT AVG(intensity) FROM moods 
+       WHERE date >= :cycleStartDate''')
+  Future<double?> getAvgIntensitySinceCycleStart(DateTime cycleStartDate);
+
+  @Query('''SELECT COUNT(*) FROM moods 
+       WHERE date >= :cycleStartDate''')
+  Future<int?> getMoodCountSinceCycleStart(DateTime cycleStartDate);
+
+  // Streak analysis - simplified
+  @Query('''SELECT COUNT(DISTINCT date) FROM moods 
+       WHERE date >= :startDate''')
+  Future<int?> getDaysWithMoodsSince(DateTime startDate);
+
+  @Query('''SELECT MAX(intensity) FROM moods''')
+  Future<int?> getHighestIntensityEver();
+
+  @Query('''SELECT MIN(intensity) FROM moods''')
+  Future<int?> getLowestIntensityEver();
+
+  @Query('''SELECT COUNT(DISTINCT mood) FROM moods''')
+  Future<int?> getUniqueMoodTypesCount();
 }

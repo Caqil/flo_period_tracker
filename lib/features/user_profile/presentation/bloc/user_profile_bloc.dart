@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/usecases/get_profile_usecase.dart';
 import '../../domain/usecases/setup_profile_usecase.dart';
@@ -36,7 +37,7 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     try {
       emit(const UserProfileLoading());
 
-      final result = await _getProfileUsecase();
+      final result = await _getProfileUsecase(NoParams());
 
       result.fold(
         (failure) {

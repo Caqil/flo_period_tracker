@@ -55,7 +55,7 @@ abstract class UserDao {
   )
   Future<void> updateUserProfileImage(
     String id,
-    String? profileImageUrl,
+    String profileImageUrl,
     DateTime updatedAt,
   );
 
@@ -83,7 +83,7 @@ abstract class UserDao {
   )
   Future<void> updateLastPeriodDate(
     String id,
-    DateTime? lastPeriodDate,
+    DateTime lastPeriodDate,
     DateTime updatedAt,
   );
 
@@ -141,36 +141,33 @@ abstract class UserDao {
   )
   Future<int?> getUserAge(String id);
 
-  @Query(
-    'SELECT CAST((julianday("now") - julianday(dateOfBirth)) / 365.25 AS INTEGER) as age FROM users WHERE dateOfBirth IS NOT NULL',
-  )
-  Future<List<int>> getAllUserAges();
+  // Profile Completeness - Simplified individual queries
+  @Query('SELECT name FROM users WHERE id = :id')
+  Future<String?> getUserName(String id);
 
-  // Profile Completeness
-  @Query('''SELECT 
-        CASE 
-          WHEN name IS NOT NULL THEN 1 ELSE 0 END +
-        CASE 
-          WHEN dateOfBirth IS NOT NULL THEN 1 ELSE 0 END +
-        CASE 
-          WHEN profileImageUrl IS NOT NULL THEN 1 ELSE 0 END +
-        CASE 
-          WHEN averageCycleLength > 0 THEN 1 ELSE 0 END +
-        CASE 
-          WHEN averagePeriodLength > 0 THEN 1 ELSE 0 END
-        as completedFields
-       FROM users WHERE id = :id''')
-  Future<int?> getProfileCompleteness(String id);
+  @Query('SELECT profileImageUrl FROM users WHERE id = :id')
+  Future<String?> getUserProfileImageUrl(String id);
 
-  @Query('''SELECT 
-        (name IS NOT NULL) as hasName,
-        (dateOfBirth IS NOT NULL) as hasDateOfBirth,
-        (profileImageUrl IS NOT NULL) as hasProfileImage,
-        (averageCycleLength > 0) as hasCycleLength,
-        (averagePeriodLength > 0) as hasPeriodLength,
-        (lastPeriodDate IS NOT NULL) as hasLastPeriodDate
-       FROM users WHERE id = :id''')
-  Future<Map<String, dynamic>?> getProfileCompletenessDetails(String id);
+  @Query('SELECT email FROM users WHERE id = :id')
+  Future<String?> getUserEmail(String id);
+
+  @Query('SELECT (name IS NOT NULL) FROM users WHERE id = :id')
+  Future<bool?> hasUserName(String id);
+
+  @Query('SELECT (dateOfBirth IS NOT NULL) FROM users WHERE id = :id')
+  Future<bool?> hasUserDateOfBirth(String id);
+
+  @Query('SELECT (profileImageUrl IS NOT NULL) FROM users WHERE id = :id')
+  Future<bool?> hasUserProfileImage(String id);
+
+  @Query('SELECT (averageCycleLength > 0) FROM users WHERE id = :id')
+  Future<bool?> hasUserCycleLength(String id);
+
+  @Query('SELECT (averagePeriodLength > 0) FROM users WHERE id = :id')
+  Future<bool?> hasUserPeriodLength(String id);
+
+  @Query('SELECT (lastPeriodDate IS NOT NULL) FROM users WHERE id = :id')
+  Future<bool?> hasUserLastPeriodDate(String id);
 
   // User Activity Analysis
   @Query(
@@ -206,47 +203,68 @@ abstract class UserDao {
   @Query('SELECT * FROM users WHERE profileImageUrl IS NULL')
   Future<List<UserEntity>> getUsersWithoutProfileImages();
 
-  // Health Profile Analysis
-  @Query('''SELECT 
-        AVG(averageCycleLength) as avgCycleLength,
-        MIN(averageCycleLength) as minCycleLength,
-        MAX(averageCycleLength) as maxCycleLength
-       FROM users 
-       WHERE averageCycleLength > 0''')
-  Future<Map<String, dynamic>?> getCycleLengthStatistics();
+  // Health Profile Analysis - Simplified individual queries
+  @Query(
+    'SELECT AVG(averageCycleLength) FROM users WHERE averageCycleLength > 0',
+  )
+  Future<double?> getAvgCycleLength();
 
-  @Query('''SELECT 
-        AVG(averagePeriodLength) as avgPeriodLength,
-        MIN(averagePeriodLength) as minPeriodLength,
-        MAX(averagePeriodLength) as maxPeriodLength
-       FROM users 
-       WHERE averagePeriodLength > 0''')
-  Future<Map<String, dynamic>?> getPeriodLengthStatistics();
+  @Query(
+    'SELECT MIN(averageCycleLength) FROM users WHERE averageCycleLength > 0',
+  )
+  Future<int?> getMinCycleLength();
 
-  @Query('''SELECT 
-        averageCycleLength,
-        COUNT(*) as userCount
-       FROM users 
-       WHERE averageCycleLength > 0
-       GROUP BY averageCycleLength
-       ORDER BY userCount DESC''')
-  Future<List<Map<String, dynamic>>> getCycleLengthDistribution();
+  @Query(
+    'SELECT MAX(averageCycleLength) FROM users WHERE averageCycleLength > 0',
+  )
+  Future<int?> getMaxCycleLength();
 
-  // User Demographics (if date of birth is available)
-  @Query('''SELECT 
-        CASE 
-          WHEN (julianday("now") - julianday(dateOfBirth)) / 365.25 < 20 THEN 'Under 20'
-          WHEN (julianday("now") - julianday(dateOfBirth)) / 365.25 < 30 THEN '20-29'
-          WHEN (julianday("now") - julianday(dateOfBirth)) / 365.25 < 40 THEN '30-39'
-          WHEN (julianday("now") - julianday(dateOfBirth)) / 365.25 < 50 THEN '40-49'
-          ELSE '50+'
-        END as ageGroup,
-        COUNT(*) as userCount
-       FROM users 
-       WHERE dateOfBirth IS NOT NULL
-       GROUP BY ageGroup
-       ORDER BY userCount DESC''')
-  Future<List<Map<String, dynamic>>> getAgeGroupDistribution();
+  @Query(
+    'SELECT AVG(averagePeriodLength) FROM users WHERE averagePeriodLength > 0',
+  )
+  Future<double?> getAvgPeriodLength();
+
+  @Query(
+    'SELECT MIN(averagePeriodLength) FROM users WHERE averagePeriodLength > 0',
+  )
+  Future<int?> getMinPeriodLength();
+
+  @Query(
+    'SELECT MAX(averagePeriodLength) FROM users WHERE averagePeriodLength > 0',
+  )
+  Future<int?> getMaxPeriodLength();
+
+  @Query('SELECT COUNT(*) FROM users WHERE averageCycleLength = :cycleLength')
+  Future<int?> getUsersWithCycleLength(int cycleLength);
+
+  // User Demographics - Simplified counts by age ranges
+  @Query('''SELECT COUNT(*) FROM users 
+       WHERE dateOfBirth IS NOT NULL 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 < 20''')
+  Future<int?> getUsersUnder20();
+
+  @Query('''SELECT COUNT(*) FROM users 
+       WHERE dateOfBirth IS NOT NULL 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 >= 20 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 < 30''')
+  Future<int?> getUsers20to29();
+
+  @Query('''SELECT COUNT(*) FROM users 
+       WHERE dateOfBirth IS NOT NULL 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 >= 30 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 < 40''')
+  Future<int?> getUsers30to39();
+
+  @Query('''SELECT COUNT(*) FROM users 
+       WHERE dateOfBirth IS NOT NULL 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 >= 40 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 < 50''')
+  Future<int?> getUsers40to49();
+
+  @Query('''SELECT COUNT(*) FROM users 
+       WHERE dateOfBirth IS NOT NULL 
+       AND (julianday("now") - julianday(dateOfBirth)) / 365.25 >= 50''')
+  Future<int?> getUsersOver50();
 
   // Data Export/Backup
   @Query(
@@ -282,38 +300,38 @@ abstract class UserDao {
   @Query('UPDATE users SET profileImageUrl = NULL, updatedAt = :updatedAt')
   Future<void> clearAllProfileImages(DateTime updatedAt);
 
-  // User Health Insights
+  // User Health Insights - Individual counts
   @Query(
-    'SELECT * FROM users WHERE averageCycleLength < 21 OR averageCycleLength > 35',
+    'SELECT COUNT(*) FROM users WHERE averageCycleLength < 21 OR averageCycleLength > 35',
   )
-  Future<List<UserEntity>> getUsersWithIrregularCycles();
+  Future<int?> getUsersWithIrregularCyclesCount();
 
   @Query(
-    'SELECT * FROM users WHERE averagePeriodLength < 3 OR averagePeriodLength > 7',
+    'SELECT COUNT(*) FROM users WHERE averagePeriodLength < 3 OR averagePeriodLength > 7',
   )
-  Future<List<UserEntity>> getUsersWithUnusualPeriodLength();
+  Future<int?> getUsersWithUnusualPeriodLengthCount();
 
   @Query(
     'SELECT COUNT(*) FROM users WHERE lastPeriodDate IS NOT NULL AND (julianday("now") - julianday(lastPeriodDate)) > :days',
   )
   Future<int?> getUsersWithOldLastPeriodDate(int days);
 
-  // Advanced User Analytics
-  @Query('''SELECT 
-        strftime('%Y-%m', createdAt) as registrationMonth,
-        COUNT(*) as newUsers
-       FROM users
-       GROUP BY strftime('%Y-%m', createdAt)
-       ORDER BY registrationMonth DESC''')
-  Future<List<Map<String, dynamic>>> getMonthlyRegistrations();
+  // Advanced User Analytics - Simplified counts
+  @Query('''SELECT COUNT(*) FROM users WHERE isOnboardingCompleted = 1''')
+  Future<int?> getCompletedUsersCount();
 
-  @Query('''SELECT 
-        isOnboardingCompleted,
-        COUNT(*) as userCount,
-        AVG(julianday("now") - julianday(createdAt)) as avgDaysSinceRegistration
-       FROM users
-       GROUP BY isOnboardingCompleted''')
-  Future<List<Map<String, dynamic>>> getOnboardingStatistics();
+  @Query('''SELECT COUNT(*) FROM users WHERE isOnboardingCompleted = 0''')
+  Future<int?> getIncompleteUsersCount();
+
+  @Query(
+    '''SELECT AVG(julianday("now") - julianday(createdAt)) FROM users WHERE isOnboardingCompleted = 1''',
+  )
+  Future<double?> getAvgDaysSinceRegistrationForCompleted();
+
+  @Query(
+    '''SELECT AVG(julianday("now") - julianday(createdAt)) FROM users WHERE isOnboardingCompleted = 0''',
+  )
+  Future<double?> getAvgDaysSinceRegistrationForIncomplete();
 
   // User Lifecycle
   @Query(
@@ -325,4 +343,14 @@ abstract class UserDao {
     'SELECT * FROM users WHERE (julianday("now") - julianday(createdAt)) <= :recentDays ORDER BY createdAt DESC',
   )
   Future<List<UserEntity>> getRecentUsers(int recentDays);
+
+  @Query(
+    'SELECT COUNT(*) FROM users WHERE (julianday("now") - julianday(updatedAt)) > :inactiveDays',
+  )
+  Future<int?> getInactiveUsersCount(int inactiveDays);
+
+  @Query(
+    'SELECT COUNT(*) FROM users WHERE (julianday("now") - julianday(createdAt)) <= :recentDays',
+  )
+  Future<int?> getRecentUsersCount(int recentDays);
 }

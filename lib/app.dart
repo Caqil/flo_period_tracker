@@ -40,13 +40,7 @@ class FloApp extends StatelessWidget {
             theme: AppTheme.lightTheme(settingsState),
             darkTheme: AppTheme.darkTheme(settingsState),
             themeMode: settingsState.themeMode,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: AppLocalizations.supportedLocales,
+            
             locale: settingsState.locale,
             routerConfig: AppRouter.router,
             builder: (context, child) {

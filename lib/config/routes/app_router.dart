@@ -64,40 +64,40 @@ class AppRouter {
             builder: (context, state) => const SymptomTrackerPage(),
           ),
 
-          // Analytics
-          GoRoute(
-            path: RouteNames.analytics,
-            name: 'analytics',
-            builder: (context, state) => const AnalyticsPage(),
-          ),
+          // // Analytics
+          // GoRoute(
+          //   path: RouteNames.analytics,
+          //   name: 'analytics',
+          //   builder: (context, state) => const AnalyticsPage(),
+          // ),
 
-          // Settings
-          GoRoute(
-            path: RouteNames.settings,
-            name: 'settings',
-            builder: (context, state) => const SettingsPage(),
-          ),
+          // // Settings
+          // GoRoute(
+          //   path: RouteNames.settings,
+          //   name: 'settings',
+          //   builder: (context, state) => const SettingsPage(),
+          // ),
         ],
       ),
 
       // Detail pages (outside shell)
-      GoRoute(
-        path: '${RouteNames.logPeriod}/:date',
-        name: 'logPeriod',
-        builder: (context, state) {
-          final dateStr = state.pathParameters['date']!;
-          return LogPeriodPage(date: DateTime.parse(dateStr));
-        },
-      ),
+      // GoRoute(
+      //   path: '${RouteNames.logPeriod}/:date',
+      //   name: 'logPeriod',
+      //   builder: (context, state) {
+      //     final dateStr = state.pathParameters['date']!;
+      //     return LogPeriodPage(date: DateTime.parse(dateStr));
+      //   },
+      // ),
 
-      GoRoute(
-        path: '${RouteNames.dayDetails}/:date',
-        name: 'dayDetails',
-        builder: (context, state) {
-          final dateStr = state.pathParameters['date']!;
-          return DayDetailsPage(date: DateTime.parse(dateStr));
-        },
-      ),
+      // GoRoute(
+      //   path: '${RouteNames.dayDetails}/:date',
+      //   name: 'dayDetails',
+      //   builder: (context, state) {
+      //     final dateStr = state.pathParameters['date']!;
+      //     return DayDetailsPage(date: DateTime.parse(dateStr));
+      //   },
+      // ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

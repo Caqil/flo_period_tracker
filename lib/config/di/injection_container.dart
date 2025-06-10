@@ -49,55 +49,78 @@ import '../../features/symptom_tracking/presentation/bloc/symptom_bloc.dart';
 final GetIt sl = GetIt.instance;
 
 Future<void> init() async {
-  // Core Services
-  sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
+  // Core Services - Database needs special initialization
+  sl.registerLazySingletonAsync<AppDatabase>(() async {
+    return await AppDatabase.getInstance();
+  });
+
+  // Register other core services
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
-  sl.registerLazySingleton<PredictionService>(() => PredictionService());
-  sl.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
-  sl.registerLazySingleton<HapticService>(() => HapticService());
+  // sl.registerLazySingleton<PredictionService>(() => PredictionService());
+  // sl.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
+  // sl.registerLazySingleton<HapticService>(() => HapticService());
+
+  // Wait for database to be ready before registering dependent services
+  await sl.isReady<AppDatabase>();
 
   // User Profile
   sl.registerLazySingleton<UserProfileLocalDatasource>(
-    () => UserProfileLocalDatasourceImpl(sl()),
+    () => UserProfileLocalDatasourceImpl(sl<AppDatabase>()),
   );
   sl.registerLazySingleton<UserProfileRepository>(
-    () => UserProfileRepositoryImpl(sl()),
+    () => UserProfileRepositoryImpl(sl<UserProfileLocalDatasource>()),
   );
-  sl.registerFactory(() => GetProfileUsecase(sl()));
-  sl.registerFactory(() => SetupProfileUsecase(sl()));
-  sl.registerFactory(() => UpdateProfileUsecase(sl()));
-  sl.registerFactory(() => UserProfileBloc(sl(), sl(), sl()));
+  sl.registerFactory(() => GetProfileUsecase(sl<UserProfileRepository>()));
+  sl.registerFactory(() => SetupProfileUsecase(sl<UserProfileRepository>()));
+  sl.registerFactory(() => UpdateProfileUsecase(sl<UserProfileRepository>()));
+  sl.registerFactory(
+    () => UserProfileBloc(
+      sl<SetupProfileUsecase>(),
+      sl<GetProfileUsecase>(),
+      sl<UpdateProfileUsecase>(),
+    ),
+  );
 
   // Calendar
   sl.registerLazySingleton<CalendarLocalDatasource>(
-    () => CalendarLocalDatasourceImpl(sl()),
+    () => CalendarLocalDatasourceImpl(sl<AppDatabase>()),
   );
   sl.registerLazySingleton<CalendarRepository>(
-    () => CalendarRepositoryImpl(sl()),
+    () => CalendarRepositoryImpl(sl<CalendarLocalDatasource>()),
   );
-  sl.registerFactory(() => GetCalendarDataUsecase(sl()));
-  sl.registerFactory(() => CalendarBloc(sl()));
+  sl.registerFactory(() => GetCalendarDataUsecase(sl<CalendarRepository>()));
+  sl.registerFactory(() => CalendarBloc(sl<GetCalendarDataUsecase>()));
 
   // Period Tracking
   sl.registerLazySingleton<PeriodLocalDatasource>(
-    () => PeriodLocalDatasourceImpl(sl()),
+    () => PeriodLocalDatasourceImpl(sl<AppDatabase>()),
   );
-  sl.registerLazySingleton<PeriodRepository>(() => PeriodRepositoryImpl(sl()));
-  sl.registerFactory(() => LogPeriodUsecase(sl()));
-  sl.registerFactory(() => GetCurrentCycleUsecase(sl()));
-  sl.registerFactory(() => PredictNextPeriodUsecase(sl()));
-  sl.registerFactory(() => PeriodBloc(sl(), sl(), sl()));
+  sl.registerLazySingleton<PeriodRepository>(
+    () => PeriodRepositoryImpl(sl<PeriodLocalDatasource>()),
+  );
+  sl.registerFactory(() => LogPeriodUsecase(sl<PeriodRepository>()));
+  sl.registerFactory(() => GetCurrentCycleUsecase(sl<PeriodRepository>()));
+  sl.registerFactory(() => PredictNextPeriodUsecase(sl<PeriodRepository>()));
+  sl.registerFactory(
+    () => PeriodBloc(
+      sl<LogPeriodUsecase>(),
+      sl<GetCurrentCycleUsecase>(),
+      sl<PredictNextPeriodUsecase>(),
+    ),
+  );
 
   // Settings
   sl.registerLazySingleton<SettingsLocalDatasource>(
     () => SettingsLocalDatasourceImpl(),
   );
   sl.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(sl()),
+    () => SettingsRepositoryImpl(sl<SettingsLocalDatasource>()),
   );
-  sl.registerFactory(() => GetSettingsUsecase(sl()));
-  sl.registerFactory(() => UpdateSettingsUsecase(sl()));
-  sl.registerFactory(() => SettingsBloc(sl(), sl()));
+  sl.registerFactory(() => GetSettingsUsecase(sl<SettingsRepository>()));
+  sl.registerFactory(() => UpdateSettingsUsecase(sl<SettingsRepository>()));
+  sl.registerFactory(
+    () => SettingsBloc(sl<GetSettingsUsecase>(), sl<UpdateSettingsUsecase>()),
+  );
 
   // Symptom Tracking
   sl.registerFactory(() => SymptomBloc());

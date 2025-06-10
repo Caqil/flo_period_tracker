@@ -7,16 +7,17 @@ import '../../domain/entities/app_settings.dart';
 import '../../domain/usecases/get_settings_usecase.dart';
 import '../../domain/usecases/update_settings_usecase.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/usecases/usecase.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
 
 @injectable
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
-  final GetSettingsUsecase _getSettingsUsecase;
-  final UpdateSettingsUsecase _updateSettingsUsecase;
+  final GetAppSettingsUsecase _getAppSettingsUsecase;
+  final UpdateAppSettingsUsecase _updateAppSettingsUsecase;
 
-  SettingsBloc(this._getSettingsUsecase, this._updateSettingsUsecase)
+  SettingsBloc(this._getAppSettingsUsecase, this._updateAppSettingsUsecase)
     : super(const SettingsState()) {
     on<SettingsLoadRequested>(_onLoadRequested);
     on<SettingsThemeChanged>(_onThemeChanged);
@@ -25,6 +26,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<SettingsNotificationsChanged>(_onNotificationsChanged);
     on<SettingsBorderRadiusChanged>(_onBorderRadiusChanged);
     on<SettingsFontFamilyChanged>(_onFontFamilyChanged);
+    on<SettingsBiometricChanged>(_onBiometricChanged);
+    on<SettingsPeriodRemindersChanged>(_onPeriodRemindersChanged);
+    on<SettingsOvulationRemindersChanged>(_onOvulationRemindersChanged);
+    on<SettingsReminderDaysChanged>(_onReminderDaysChanged);
+    on<SettingsReminderTimeChanged>(_onReminderTimeChanged);
   }
 
   Future<void> _onLoadRequested(
@@ -32,13 +38,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     Emitter<SettingsState> emit,
   ) async {
     try {
-      final result = await _getSettingsUsecase();
+      final result = await _getAppSettingsUsecase(NoParams());
 
       result.fold(
         (failure) {
           AppLogger.w('Settings load failed: ${failure.message}');
           // Emit default settings on failure
-          emit(state);
+          emit(state.copyWith(isLoaded: true));
         },
         (settings) {
           AppLogger.d('Settings loaded successfully');
@@ -50,6 +56,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
               notificationsEnabled: settings.notificationsEnabled,
               borderRadius: settings.borderRadius,
               fontFamily: settings.fontFamily,
+              biometricEnabled: settings.biometricEnabled,
+              periodRemindersEnabled: settings.periodRemindersEnabled,
+              ovulationRemindersEnabled: settings.ovulationRemindersEnabled,
+              reminderDaysBefore: settings.reminderDaysBefore,
+              reminderTime: settings.reminderTime,
               isLoaded: true,
             ),
           );
@@ -57,6 +68,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
     } catch (e, stackTrace) {
       AppLogger.e('Settings load error', e, stackTrace);
+      emit(state.copyWith(isLoaded: true));
     }
   }
 
@@ -108,6 +120,46 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     await _saveSettings();
   }
 
+  Future<void> _onBiometricChanged(
+    SettingsBiometricChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    emit(state.copyWith(biometricEnabled: event.enabled));
+    await _saveSettings();
+  }
+
+  Future<void> _onPeriodRemindersChanged(
+    SettingsPeriodRemindersChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    emit(state.copyWith(periodRemindersEnabled: event.enabled));
+    await _saveSettings();
+  }
+
+  Future<void> _onOvulationRemindersChanged(
+    SettingsOvulationRemindersChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    emit(state.copyWith(ovulationRemindersEnabled: event.enabled));
+    await _saveSettings();
+  }
+
+  Future<void> _onReminderDaysChanged(
+    SettingsReminderDaysChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    emit(state.copyWith(reminderDaysBefore: event.days));
+    await _saveSettings();
+  }
+
+  Future<void> _onReminderTimeChanged(
+    SettingsReminderTimeChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    emit(state.copyWith(reminderTime: event.time));
+    await _saveSettings();
+  }
+
   Future<void> _saveSettings() async {
     try {
       final settings = AppSettings(
@@ -117,9 +169,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         notificationsEnabled: state.notificationsEnabled,
         borderRadius: state.borderRadius,
         fontFamily: state.fontFamily,
+        biometricEnabled: state.biometricEnabled,
+        periodRemindersEnabled: state.periodRemindersEnabled,
+        ovulationRemindersEnabled: state.ovulationRemindersEnabled,
+        reminderDaysBefore: state.reminderDaysBefore,
+        reminderTime: state.reminderTime,
       );
 
-      final result = await _updateSettingsUsecase(settings);
+      final result = await _updateAppSettingsUsecase(settings);
 
       result.fold(
         (failure) => AppLogger.w('Settings save failed: ${failure.message}'),

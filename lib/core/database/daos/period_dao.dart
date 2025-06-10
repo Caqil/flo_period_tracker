@@ -79,12 +79,7 @@ abstract class PeriodDao {
   )
   Future<double?> getAveragePeriodLengthSince(DateTime sinceDate);
 
-  // Flow Intensity Analysis
-  @Query(
-    'SELECT flowIntensity, COUNT(*) as count FROM periods GROUP BY flowIntensity ORDER BY count DESC',
-  )
-  Future<List<Map<String, dynamic>>> getFlowIntensityDistribution();
-
+  // Flow Intensity Analysis - Simplified queries
   @Query(
     'SELECT flowIntensity FROM periods GROUP BY flowIntensity ORDER BY COUNT(*) DESC LIMIT 1',
   )
@@ -107,15 +102,26 @@ abstract class PeriodDao {
   )
   Future<int?> getPeriodsCountInRange(DateTime startDate, DateTime endDate);
 
+  // Simplified cycle stats
+  @Query('SELECT MIN(cycleLength) FROM periods WHERE isConfirmed = 1')
+  Future<int?> getMinCycleLength();
+
+  @Query('SELECT MAX(cycleLength) FROM periods WHERE isConfirmed = 1')
+  Future<int?> getMaxCycleLength();
+
+  @Query('SELECT AVG(cycleLength) FROM periods WHERE isConfirmed = 1')
+  Future<double?> getAvgCycleLength();
+
+  // Simplified period stats
   @Query(
-    'SELECT MIN(cycleLength) as minCycle, MAX(cycleLength) as maxCycle, AVG(cycleLength) as avgCycle FROM periods WHERE isConfirmed = 1',
+    'SELECT MIN(julianday(endDate) - julianday(startDate) + 1) FROM periods WHERE endDate IS NOT NULL AND isConfirmed = 1',
   )
-  Future<Map<String, dynamic>?> getCycleLengthStats();
+  Future<double?> getMinPeriodLength();
 
   @Query(
-    'SELECT MIN(julianday(endDate) - julianday(startDate) + 1) as minPeriod, MAX(julianday(endDate) - julianday(startDate) + 1) as maxPeriod FROM periods WHERE endDate IS NOT NULL AND isConfirmed = 1',
+    'SELECT MAX(julianday(endDate) - julianday(startDate) + 1) FROM periods WHERE endDate IS NOT NULL AND isConfirmed = 1',
   )
-  Future<Map<String, dynamic>?> getPeriodLengthStats();
+  Future<double?> getMaxPeriodLength();
 
   // Cycle Prediction Data
   @Query(
@@ -129,17 +135,11 @@ abstract class PeriodDao {
   Future<List<double>> getRecentPeriodLengths(int count);
 
   @Query(
-    'SELECT startDate, endDate, cycleLength FROM periods WHERE isConfirmed = 1 ORDER BY startDate DESC LIMIT :count',
+    'SELECT * FROM periods WHERE isConfirmed = 1 ORDER BY startDate DESC LIMIT :count',
   )
   Future<List<PeriodEntity>> getPeriodsForPrediction(int count);
 
-  // Irregularity Detection
-  @Query('''SELECT ABS(cycleLength - :targetLength) as deviation 
-       FROM periods 
-       WHERE isConfirmed = 1 AND startDate >= :sinceDate
-       ORDER BY deviation DESC''')
-  Future<List<int>> getCycleDeviations(int targetLength, DateTime sinceDate);
-
+  // Irregularity Detection - Simplified
   @Query('''SELECT COUNT(*) 
        FROM periods 
        WHERE isConfirmed = 1 
@@ -150,28 +150,6 @@ abstract class PeriodDao {
     int threshold,
     DateTime sinceDate,
   );
-
-  // Weekly/Monthly Analysis
-  @Query('''SELECT 
-        strftime('%Y-%m', startDate) as month,
-        COUNT(*) as periodCount,
-        AVG(cycleLength) as avgCycleLength
-       FROM periods 
-       WHERE isConfirmed = 1 AND startDate >= :startDate 
-       GROUP BY strftime('%Y-%m', startDate) 
-       ORDER BY month DESC''')
-  Future<List<Map<String, dynamic>>> getMonthlyPeriodStats(DateTime startDate);
-
-  @Query('''SELECT 
-        strftime('%Y', startDate) as year,
-        COUNT(*) as periodCount,
-        AVG(cycleLength) as avgCycleLength,
-        AVG(julianday(endDate) - julianday(startDate) + 1) as avgPeriodLength
-       FROM periods 
-       WHERE isConfirmed = 1 AND startDate >= :startDate 
-       GROUP BY strftime('%Y', startDate) 
-       ORDER BY year DESC''')
-  Future<List<Map<String, dynamic>>> getYearlyPeriodStats(DateTime startDate);
 
   // Notes and Symptoms
   @Query('SELECT * FROM periods WHERE notes IS NOT NULL AND notes != ""')
@@ -199,16 +177,11 @@ abstract class PeriodDao {
   )
   Future<bool?> isPeriodActiveOnDate(DateTime date);
 
-  // Calendar Integration
-  @Query('''SELECT 
-        startDate,
-        endDate,
-        flowIntensity,
-        (CASE WHEN endDate IS NULL THEN 0 ELSE 1 END) as isComplete
-       FROM periods 
+  // Calendar Integration - Return entities instead of maps
+  @Query('''SELECT * FROM periods 
        WHERE startDate >= :startDate AND startDate <= :endDate
        ORDER BY startDate''')
-  Future<List<Map<String, dynamic>>> getPeriodsForCalendar(
+  Future<List<PeriodEntity>> getPeriodsForCalendar(
     DateTime startDate,
     DateTime endDate,
   );
@@ -242,46 +215,25 @@ abstract class PeriodDao {
   )
   Future<List<PeriodEntity>> getModifiedPeriodsSince(DateTime sinceDate);
 
-  // Advanced Pattern Analysis
-  @Query('''SELECT 
-        cycleLength,
-        COUNT(*) as frequency,
-        AVG(julianday(endDate) - julianday(startDate) + 1) as avgPeriodLength
-       FROM periods 
-       WHERE isConfirmed = 1 AND endDate IS NOT NULL
-       GROUP BY cycleLength 
-       ORDER BY frequency DESC''')
-  Future<List<Map<String, dynamic>>> getCycleLengthPatterns();
+  // Simplified statistical queries that return counts
+  @Query('SELECT COUNT(*) FROM periods WHERE flowIntensity = :intensity')
+  Future<int?> getFlowIntensityCount(String intensity);
 
-  @Query('''SELECT 
-        strftime('%w', startDate) as dayOfWeek,
-        COUNT(*) as frequency
-       FROM periods 
-       WHERE isConfirmed = 1
-       GROUP BY strftime('%w', startDate) 
-       ORDER BY frequency DESC''')
-  Future<List<Map<String, dynamic>>> getPeriodStartDayPatterns();
+  @Query(
+    'SELECT COUNT(*) FROM periods WHERE cycleLength = :length AND isConfirmed = 1',
+  )
+  Future<int?> getCycleLengthCount(int length);
 
-  // Health Insights
-  @Query('''SELECT 
-        CASE 
-          WHEN cycleLength < 21 THEN 'short'
-          WHEN cycleLength > 35 THEN 'long'
-          ELSE 'normal'
-        END as cycleType,
-        COUNT(*) as count
-       FROM periods 
-       WHERE isConfirmed = 1 AND startDate >= :sinceDate
-       GROUP BY cycleType''')
-  Future<List<Map<String, dynamic>>> getCycleTypeDistribution(
-    DateTime sinceDate,
-  );
+  // Health Insights - Simplified
+  @Query('''SELECT COUNT(*) FROM periods 
+       WHERE isConfirmed = 1 AND startDate >= :sinceDate AND cycleLength < 21''')
+  Future<int?> getShortCyclesCount(DateTime sinceDate);
 
-  @Query('''SELECT 
-        flowIntensity,
-        AVG(julianday(endDate) - julianday(startDate) + 1) as avgDuration
-       FROM periods 
-       WHERE endDate IS NOT NULL AND isConfirmed = 1
-       GROUP BY flowIntensity''')
-  Future<List<Map<String, dynamic>>> getFlowIntensityDurationCorrelation();
+  @Query('''SELECT COUNT(*) FROM periods 
+       WHERE isConfirmed = 1 AND startDate >= :sinceDate AND cycleLength > 35''')
+  Future<int?> getLongCyclesCount(DateTime sinceDate);
+
+  @Query('''SELECT COUNT(*) FROM periods 
+       WHERE isConfirmed = 1 AND startDate >= :sinceDate AND cycleLength >= 21 AND cycleLength <= 35''')
+  Future<int?> getNormalCyclesCount(DateTime sinceDate);
 }

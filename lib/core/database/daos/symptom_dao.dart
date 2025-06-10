@@ -109,30 +109,7 @@ abstract class SymptomDao {
     DateTime endDate,
   );
 
-  @Query(
-    'SELECT intensity, COUNT(*) as count FROM symptoms GROUP BY intensity ORDER BY intensity',
-  )
-  Future<List<Map<String, dynamic>>> getIntensityDistribution();
-
-  // Frequency Analysis
-  @Query(
-    'SELECT name, COUNT(*) as frequency FROM symptoms GROUP BY name ORDER BY frequency DESC',
-  )
-  Future<List<Map<String, dynamic>>> getSymptomFrequency();
-
-  @Query(
-    'SELECT category, COUNT(*) as frequency FROM symptoms GROUP BY category ORDER BY frequency DESC',
-  )
-  Future<List<Map<String, dynamic>>> getCategoryFrequency();
-
-  @Query(
-    'SELECT name, COUNT(*) as frequency FROM symptoms WHERE date >= :startDate AND date <= :endDate GROUP BY name ORDER BY frequency DESC',
-  )
-  Future<List<Map<String, dynamic>>> getSymptomFrequencyInRange(
-    DateTime startDate,
-    DateTime endDate,
-  );
-
+  // Frequency Analysis - Simplified queries
   @Query(
     'SELECT name FROM symptoms GROUP BY name ORDER BY COUNT(*) DESC LIMIT 1',
   )
@@ -142,6 +119,12 @@ abstract class SymptomDao {
     'SELECT category FROM symptoms GROUP BY category ORDER BY COUNT(*) DESC LIMIT 1',
   )
   Future<String?> getMostFrequentCategory();
+
+  @Query('SELECT COUNT(*) FROM symptoms WHERE name = :name')
+  Future<int?> getSymptomFrequencyByName(String name);
+
+  @Query('SELECT COUNT(*) FROM symptoms WHERE category = :category')
+  Future<int?> getCategoryFrequency(String category);
 
   // Recent Symptoms
   @Query(
@@ -175,65 +158,6 @@ abstract class SymptomDao {
   @Query('SELECT COUNT(DISTINCT date) FROM symptoms')
   Future<int?> getDaysWithSymptomsCount();
 
-  // Pattern Analysis
-  @Query('''SELECT 
-        strftime('%w', date) as dayOfWeek,
-        COUNT(*) as frequency,
-        AVG(intensity) as avgIntensity
-       FROM symptoms 
-       WHERE date >= :startDate
-       GROUP BY strftime('%w', date) 
-       ORDER BY frequency DESC''')
-  Future<List<Map<String, dynamic>>> getSymptomsByDayOfWeek(DateTime startDate);
-
-  @Query('''SELECT 
-        strftime('%Y-%W', date) as week,
-        COUNT(*) as symptomCount,
-        AVG(intensity) as avgIntensity
-       FROM symptoms 
-       WHERE date >= :startDate 
-       GROUP BY strftime('%Y-%W', date) 
-       ORDER BY week DESC''')
-  Future<List<Map<String, dynamic>>> getWeeklySymptomStats(DateTime startDate);
-
-  @Query('''SELECT 
-        strftime('%Y-%m', date) as month,
-        COUNT(*) as symptomCount,
-        AVG(intensity) as avgIntensity
-       FROM symptoms 
-       WHERE date >= :startDate 
-       GROUP BY strftime('%Y-%m', date) 
-       ORDER BY month DESC''')
-  Future<List<Map<String, dynamic>>> getMonthlySymptomStats(DateTime startDate);
-
-  // Cycle Day Analysis (for period tracking correlation)
-  @Query('''SELECT 
-        (julianday(date) - julianday(:cycleStartDate)) % :cycleLength + 1 as cycleDay,
-        COUNT(*) as symptomCount,
-        AVG(intensity) as avgIntensity
-       FROM symptoms 
-       WHERE date >= :cycleStartDate
-       GROUP BY cycleDay 
-       ORDER BY cycleDay''')
-  Future<List<Map<String, dynamic>>> getSymptomsByCycleDay(
-    DateTime cycleStartDate,
-    int cycleLength,
-  );
-
-  @Query('''SELECT 
-        (julianday(date) - julianday(:cycleStartDate)) % :cycleLength + 1 as cycleDay,
-        name,
-        COUNT(*) as frequency
-       FROM symptoms 
-       WHERE date >= :cycleStartDate AND name = :symptomName
-       GROUP BY cycleDay, name
-       ORDER BY cycleDay''')
-  Future<List<Map<String, dynamic>>> getSpecificSymptomByCycleDay(
-    DateTime cycleStartDate,
-    int cycleLength,
-    String symptomName,
-  );
-
   // Severity Analysis
   @Query('SELECT * FROM symptoms WHERE intensity >= 4 ORDER BY date DESC')
   Future<List<SymptomEntity>> getSevereSymptoms();
@@ -246,15 +170,14 @@ abstract class SymptomDao {
     DateTime startDate,
   );
 
-  @Query('''SELECT 
-        name,
-        MAX(intensity) as maxIntensity,
-        AVG(intensity) as avgIntensity,
-        COUNT(*) as frequency
-       FROM symptoms 
-       GROUP BY name 
-       ORDER BY maxIntensity DESC, avgIntensity DESC''')
-  Future<List<Map<String, dynamic>>> getSymptomSeverityAnalysis();
+  @Query('SELECT MAX(intensity) FROM symptoms WHERE name = :name')
+  Future<int?> getMaxIntensityByName(String name);
+
+  @Query('SELECT AVG(intensity) FROM symptoms WHERE name = :name')
+  Future<double?> getAvgIntensityByName(String name);
+
+  @Query('SELECT COUNT(*) FROM symptoms WHERE name = :name')
+  Future<int?> getFrequencyByName(String name);
 
   // Notes and Description Queries
   @Query(
@@ -272,24 +195,12 @@ abstract class SymptomDao {
   )
   Future<List<String>> getAllDescriptions();
 
-  // Symptom Correlation Analysis
-  @Query('''SELECT 
-        s1.name as symptom1,
-        s2.name as symptom2,
-        COUNT(*) as cooccurrence
-       FROM symptoms s1
-       JOIN symptoms s2 ON s1.date = s2.date AND s1.name < s2.name
-       WHERE s1.date >= :startDate
-       GROUP BY s1.name, s2.name
-       HAVING cooccurrence >= :minCooccurrence
-       ORDER BY cooccurrence DESC''')
-  Future<List<Map<String, dynamic>>> getSymptomCorrelations(
-    DateTime startDate,
-    int minCooccurrence,
-  );
-
+  // Correlation Analysis - Simplified
   @Query('SELECT DISTINCT name FROM symptoms WHERE date = :date')
   Future<List<String>> getSymptomNamesForDate(DateTime date);
+
+  @Query('SELECT COUNT(*) FROM symptoms WHERE date = :date AND name = :name')
+  Future<int?> getSymptomCountForDateAndName(DateTime date, String name);
 
   // Validation Queries
   @Query('SELECT COUNT(*) FROM symptoms WHERE date = :date')
@@ -324,61 +235,84 @@ abstract class SymptomDao {
   )
   Future<List<SymptomEntity>> getModifiedSymptomsSince(DateTime sinceDate);
 
-  // Advanced Analytics
-  @Query('''SELECT 
-        date,
-        COUNT(DISTINCT name) as uniqueSymptoms,
-        AVG(intensity) as avgIntensity,
-        MAX(intensity) as maxIntensity
-       FROM symptoms 
-       WHERE date >= :startDate
-       GROUP BY date 
-       ORDER BY date DESC''')
-  Future<List<Map<String, dynamic>>> getDailySymptomSummary(DateTime startDate);
+  // Advanced Analytics - Simplified individual queries
+  @Query('''SELECT COUNT(DISTINCT name) FROM symptoms WHERE date = :date''')
+  Future<int?> getUniqueSymptomCountForDate(DateTime date);
 
-  @Query('''SELECT 
-        category,
-        name,
-        AVG(intensity) as avgIntensity,
-        MIN(intensity) as minIntensity,
-        MAX(intensity) as maxIntensity,
-        COUNT(*) as frequency,
-        COUNT(DISTINCT date) as dayCount
-       FROM symptoms 
-       WHERE date >= :startDate AND date <= :endDate
-       GROUP BY category, name
-       ORDER BY category, frequency DESC''')
-  Future<List<Map<String, dynamic>>> getDetailedSymptomStats(
+  @Query('''SELECT AVG(intensity) FROM symptoms WHERE date = :date''')
+  Future<double?> getAvgIntensityForDate(DateTime date);
+
+  @Query('''SELECT MAX(intensity) FROM symptoms WHERE date = :date''')
+  Future<int?> getMaxIntensityForDate(DateTime date);
+
+  // Detailed symptom stats - individual queries
+  @Query('''SELECT AVG(intensity) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category AND name = :name''')
+  Future<double?> getAvgIntensityForSymptom(
     DateTime startDate,
     DateTime endDate,
+    String category,
+    String name,
   );
 
-  // Trend Analysis
-  @Query('''SELECT 
-        date,
-        name,
-        intensity,
-        LAG(intensity) OVER (PARTITION BY name ORDER BY date) as previousIntensity
-       FROM symptoms 
-       WHERE name = :symptomName AND date >= :startDate 
-       ORDER BY date''')
-  Future<List<Map<String, dynamic>>> getSymptomTrend(
-    String symptomName,
-    DateTime startDate,
-  );
-
-  // Health Insights
-  @Query('''SELECT 
-        category,
-        COUNT(DISTINCT name) as uniqueSymptoms,
-        COUNT(*) as totalOccurrences,
-        AVG(intensity) as avgIntensity
-       FROM symptoms 
-       WHERE date >= :startDate AND date <= :endDate
-       GROUP BY category
-       ORDER BY totalOccurrences DESC''')
-  Future<List<Map<String, dynamic>>> getCategoryInsights(
+  @Query('''SELECT MIN(intensity) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category AND name = :name''')
+  Future<int?> getMinIntensityForSymptom(
     DateTime startDate,
     DateTime endDate,
+    String category,
+    String name,
+  );
+
+  @Query('''SELECT MAX(intensity) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category AND name = :name''')
+  Future<int?> getMaxIntensityForSymptom(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
+    String name,
+  );
+
+  @Query('''SELECT COUNT(*) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category AND name = :name''')
+  Future<int?> getFrequencyForSymptom(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
+    String name,
+  );
+
+  @Query('''SELECT COUNT(DISTINCT date) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category AND name = :name''')
+  Future<int?> getDayCountForSymptom(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
+    String name,
+  );
+
+  // Health Insights - Simplified individual queries
+  @Query('''SELECT COUNT(DISTINCT name) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category''')
+  Future<int?> getUniqueSymptomsByCategory(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
+  );
+
+  @Query('''SELECT COUNT(*) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category''')
+  Future<int?> getTotalOccurrencesByCategory(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
+  );
+
+  @Query('''SELECT AVG(intensity) FROM symptoms 
+       WHERE date >= :startDate AND date <= :endDate AND category = :category''')
+  Future<double?> getAvgIntensityByCategory(
+    DateTime startDate,
+    DateTime endDate,
+    String category,
   );
 }

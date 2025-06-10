@@ -1,3 +1,4 @@
+// lib/core/database/app_database.dart
 import 'dart:async';
 import 'package:floor/floor.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -10,9 +11,11 @@ import 'entities/period_entity.dart';
 import 'entities/symptom_entity.dart';
 import 'entities/mood_entity.dart';
 import 'entities/user_entity.dart';
+import 'converters/date_time_converter.dart';
 
 part 'app_database.g.dart';
 
+@TypeConverters([DateTimeConverter, DateTimeNullableConverter])
 @Database(
   version: 1,
   entities: [PeriodEntity, SymptomEntity, MoodEntity, UserEntity],

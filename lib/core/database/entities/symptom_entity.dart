@@ -1,16 +1,23 @@
+// lib/core/database/entities/symptom_entity.dart
 import 'package:floor/floor.dart';
 import 'package:equatable/equatable.dart';
+
+import '../converters/date_time_converter.dart';
 
 @Entity(tableName: 'symptoms')
 class SymptomEntity extends Equatable {
   @PrimaryKey(autoGenerate: true)
   final int? id;
 
+  @TypeConverters([DateTimeConverter])
   final DateTime date;
+
   final String category; // cramps, headache, bloating, etc.
   final String name;
   final int intensity; // 1-5 scale
   final String? description;
+
+  @TypeConverters([DateTimeConverter])
   final DateTime createdAt;
 
   const SymptomEntity({

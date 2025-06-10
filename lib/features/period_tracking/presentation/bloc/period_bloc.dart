@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/period.dart';
 import '../../domain/entities/cycle.dart';
 import '../../domain/usecases/log_period_usecase.dart';
@@ -37,7 +38,7 @@ class PeriodBloc extends Bloc<PeriodEvent, PeriodState> {
     try {
       emit(const PeriodLoading());
 
-      final currentCycleResult = await _getCurrentCycleUsecase();
+      final currentCycleResult = await _getCurrentCycleUsecase(NoParams());
 
       currentCycleResult.fold(
         (failure) {
@@ -149,7 +150,7 @@ class PeriodBloc extends Bloc<PeriodEvent, PeriodState> {
 
       final currentState = state as PeriodLoaded;
 
-      final result = await _predictNextPeriodUsecase();
+      final result = await _predictNextPeriodUsecase(NoParams());
 
       result.fold(
         (failure) {
